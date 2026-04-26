@@ -86,6 +86,7 @@ export const Dashboard: React.FC<{
           - Detect the user's language and respond accordingly.
           - Triage the problem into categories: Housing (landlord, lease, eviction), Immigration (visa, deportation, asylum), Bankruptcy, Family, etc.
           - Ask about jurisdiction (city and state). Only provide info for Washington State.
+          - For pro bono (free) help requests, only refer to the city, do not ask for or narrow down to the zip code.
           - If Housing: ask if they received a written notice and when.
           - NEVER say "You should do X." instead say "The law says X" or "Lawyers often look at Y."
           - If you don't know, say you cannot answer. Do not make assumptions.
@@ -108,7 +109,7 @@ export const Dashboard: React.FC<{
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!validateWAZip(zipCode)) {
+    if (!proBonoOnly && !validateWAZip(zipCode)) {
       setLocationError("Zip code is invalid for Washington state or outside its boundaries.");
       return;
     }
@@ -319,7 +320,7 @@ export const Dashboard: React.FC<{
                     <div>
                       <label className="block font-bold text-on-surface mb-2">City <span className="text-status-error">*</span></label>
                       <input 
-                        className={`w-full border rounded p-3 bg-surface-bright focus:ring-secondary focus:border-secondary text-on-surface shadow-sm ${locationError ? 'border-error' : 'border-outline-variant'}`} 
+                        className={`w-full border rounded p-3 bg-surface-bright focus:ring-secondary focus:border-secondary text-on-surface shadow-sm ${locationError && !proBonoOnly ? 'border-error' : 'border-outline-variant'}`} 
                         type="text" 
                         value={city}
                         onChange={(e) => setCity(e.target.value)}
@@ -328,18 +329,34 @@ export const Dashboard: React.FC<{
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-on-surface mb-2">ZIP Code <span className="text-status-error">*</span></label>
+                      <label className="block font-bold text-on-surface mb-2">ZIP Code {!proBonoOnly && <span className="text-status-error">*</span>}</label>
                       <input 
-                        className={`w-full border rounded p-3 bg-surface-bright focus:ring-secondary focus:border-secondary text-on-surface shadow-sm ${locationError ? 'border-error' : 'border-outline-variant'}`} 
+                        className={`w-full border rounded p-3 bg-surface-bright focus:ring-secondary focus:border-secondary text-on-surface shadow-sm ${locationError && !proBonoOnly ? 'border-error' : 'border-outline-variant'} ${proBonoOnly ? 'opacity-50 grayscale' : ''}`} 
                         type="text" 
                         value={zipCode}
                         onChange={handleZipChange}
-                        placeholder="e.g. 98104"
-                        required
+                        placeholder={proBonoOnly ? "N/A (Pro Bono)" : "e.g. 98104"}
+                        disabled={proBonoOnly}
+                        required={!proBonoOnly}
                       />
                     </div>
                   </div>
-                  {locationError && (
+                  <div className="flex items-center gap-3 bg-white p-4 rounded-lg border border-outline-variant">
+                    <span className="font-bold text-on-surface">I am looking for pro bono (free) legal help</span>
+                    <label className="relative inline-flex items-center cursor-pointer ml-auto">
+                      <input 
+                        className="sr-only peer" 
+                        type="checkbox" 
+                        checked={proBonoOnly}
+                        onChange={(e) => {
+                          setProBonoOnly(e.target.checked);
+                          if (e.target.checked) setLocationError("");
+                        }}
+                      />
+                      <div className="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-secondary"></div>
+                    </label>
+                  </div>
+                  {locationError && !proBonoOnly && (
                     <div className="flex items-start gap-2 text-status-error bg-error-container p-4 rounded-lg">
                       <span className="material-symbols-outlined mt-0.5">error</span>
                       <p className="text-sm font-medium">{locationError}</p>
@@ -511,7 +528,14 @@ export const Dashboard: React.FC<{
                     </div>
                     
                     <div className="bg-surface-muted p-4 rounded-md mt-2 flex flex-col gap-2">
-                        {l.address && <div className="flex items-start gap-2"><span className="material-symbols-outlined text-sm mt-1">location_on</span> <span className="text-sm">{l.address}</span></div>}
+                        {l.address && (
+                          <div className="flex items-start gap-2">
+                            <span className="material-symbols-outlined text-sm mt-1">location_on</span> 
+                            <span className="text-sm">
+                              {l.isProBono ? (l.location || l.address.split(',').slice(-2).join(',').trim()) : l.address}
+                            </span>
+                          </div>
+                        )}
                         {l.phone && <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">call</span> <span className="text-sm">{l.phone}</span></div>}
                         {l.email && <div className="flex items-center gap-2"><span className="material-symbols-outlined text-sm">mail</span> <span className="text-sm"><a href={`mailto:${l.email}`} className="text-primary hover:underline">{l.email}</a></span></div>}
                     </div>

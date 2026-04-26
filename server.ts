@@ -108,7 +108,7 @@ app.get("/api/lawyers", async (req, res) => {
   }
 
   if (city) searchParams.append('City', String(city));
-  if (zip) searchParams.append('Zip', String(zip));
+  if (zip && status !== 'Pro+Bono') searchParams.append('Zip', String(zip));
   if (area) searchParams.append('AreaOfPractice', String(area));
   if (language) searchParams.append('Language', String(language));
 
@@ -207,7 +207,7 @@ app.get("/api/lawyers", async (req, res) => {
                      rating: rating,
                      reviews: reviews,
                      distance: (Math.random() * 5).toFixed(1) + " miles away",
-                     isProBono: (language === 'Spanish' || language === 'Vietnamese'), // mock
+                     isProBono: status === 'Pro+Bono',
                      lat: lat,
                      lng: lng,
                      initials: name.split(' ').map((n: string) => n[0]).join('')
