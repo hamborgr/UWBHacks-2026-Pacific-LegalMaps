@@ -1,0 +1,12 @@
+{
+  "name": "Remix: Pacific LegalMaps",
+  "description": "Vetted legal help and AI-assisted intake for Washington State residents, ensuring privacy and connectivity to local attorneys.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "AI-powered legal triage",
+    "Attorney directory aggregation",
+    "PII stripping privacy proxy"
+  ]
+}
